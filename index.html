@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MTA — Imtihon Tayyorgarlik</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0f14;
+  --bg2: #13161e;
+  --bg3: #1a1e28;
+  --bg4: #222736;
+  --accent: #4ade80;
+  --accent2: #22d3ee;
+  --danger: #f87171;
+  --warn: #fbbf24;
+  --text: #e8eaf2;
+  --text2: #9ca3b0;
+  --text3: #5a6070;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --radius: 12px;
+  --radius2: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Sora', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 15px;
+}
+
+/* ---- SCROLLBAR ---- */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+
+/* ---- SIDEBAR ---- */
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: 260px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  z-index: 100;
+  overflow: hidden;
+}
+.sidebar-logo {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, #4ade8022, #22d3ee22);
+  border: 1px solid #4ade8044;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px; font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+.logo-badge span { color: var(--text2); font-weight: 400; }
+.sidebar-title {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text3); padding: 16px 20px 8px; font-weight: 600;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 0;
+  font-size: 13px;
+  color: var(--text2);
+  transition: all 0.15s;
+  border-left: 3px solid transparent;
+  position: relative;
+}
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active { background: var(--bg3); color: var(--accent); border-left-color: var(--accent); }
+.nav-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--bg4); flex-shrink: 0;
+  transition: background 0.2s;
+}
+.nav-item.active .nav-dot { background: var(--accent); }
+.nav-count {
+  margin-left: auto;
+  font-size: 11px; font-family: 'JetBrains Mono', monospace;
+  color: var(--text3);
+}
+.sidebar-stats {
+  margin-top: auto;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+.progress-label {
+  display: flex; justify-content: space-between;
+  font-size: 12px; color: var(--text3); margin-bottom: 8px;
+}
+.progress-track {
+  height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: var(--accent);
+  border-radius: 2px; transition: width 0.4s ease;
+  width: 0%;
+}
+.stat-row {
+  display: flex; gap: 8px; margin-top: 12px;
+}
+.stat-pill {
+  flex: 1; padding: 6px 8px; border-radius: var(--radius2);
+  text-align: center; font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.stat-pill.green { background: #4ade8015; color: var(--accent); }
+.stat-pill.red { background: #f8717115; color: var(--danger); }
+.stat-pill.gray { background: var(--bg3); color: var(--text3); }
+.stat-pill .num { font-size: 18px; font-weight: 600; display: block; }
+
+/* ---- MAIN ---- */
+.main {
+  margin-left: 260px;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 32px;
+  display: flex; align-items: center; gap: 16px;
+}
+.search-wrap {
+  flex: 1; position: relative;
+}
+.search-icon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--text3); font-size: 16px; pointer-events: none;
+}
+#search {
+  width: 100%; padding: 9px 12px 9px 38px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  color: var(--text); font-family: 'Sora', sans-serif; font-size: 14px;
+  outline: none; transition: border-color 0.2s;
+}
+#search:focus { border-color: var(--accent); }
+#search::placeholder { color: var(--text3); }
+.filter-chips { display: flex; gap: 6px; }
+.chip {
+  padding: 6px 14px; border-radius: 999px;
+  border: 1px solid var(--border2);
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  color: var(--text2); background: transparent;
+  transition: all 0.15s; white-space: nowrap;
+  font-family: 'Sora', sans-serif;
+}
+.chip:hover { border-color: var(--border2); background: var(--bg3); color: var(--text); }
+.chip.active-all { background: var(--accent); color: #0d0f14; border-color: var(--accent); }
+.chip.active-known { background: #4ade8020; color: var(--accent); border-color: var(--accent); }
+.chip.active-unknown { background: #f8717120; color: var(--danger); border-color: var(--danger); }
+.chip.active-unseen { background: #22d3ee20; color: var(--accent2); border-color: var(--accent2); }
+
+.content { padding: 32px; flex: 1; }
+
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.section-title {
+  font-size: 22px; font-weight: 700; color: var(--text);
+}
+.section-sub { font-size: 13px; color: var(--text3); margin-top: 2px; }
+.count-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; color: var(--text3);
+  background: var(--bg3); border: 1px solid var(--border);
+  padding: 4px 12px; border-radius: 999px;
+}
+
+/* ---- QUESTION CARDS ---- */
+.qgrid { display: flex; flex-direction: column; gap: 10px; }
+.qcard {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.15s;
+}
+.qcard:hover { border-color: var(--border2); transform: translateY(-1px); }
+.qcard.known { border-left: 3px solid var(--accent); }
+.qcard.unknown { border-left: 3px solid var(--danger); }
+.qcard-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px; cursor: pointer;
+  user-select: none;
+}
+.qnum {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--text3);
+  background: var(--bg4); padding: 3px 8px; border-radius: 4px;
+  flex-shrink: 0;
+}
+.qtopic-tag {
+  font-size: 11px; padding: 3px 8px; border-radius: 4px;
+  background: #22d3ee15; color: var(--accent2);
+  flex-shrink: 0; font-weight: 500;
+}
+.qtext {
+  font-size: 14px; font-weight: 500; color: var(--text); flex: 1;
+  line-height: 1.5;
+}
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--bg4); flex-shrink: 0; margin-left: auto;
+  transition: background 0.2s;
+}
+.qcard.known .status-dot { background: var(--accent); }
+.qcard.unknown .status-dot { background: var(--danger); }
+.chevron {
+  font-size: 12px; color: var(--text3); flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.qcard.open .chevron { transform: rotate(180deg); }
+
+.qanswer {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.qcard.open .qanswer { max-height: 1000px; }
+.answer-inner {
+  padding: 0 20px 16px;
+  border-top: 1px solid var(--border);
+  margin-top: 0;
+  padding-top: 16px;
+}
+.answer-text {
+  font-size: 14px; color: var(--text2); line-height: 1.8;
+}
+.answer-text strong { color: var(--text); font-weight: 600; }
+.answer-text code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  background: var(--bg4); color: #a5f3fc;
+  padding: 2px 6px; border-radius: 4px;
+}
+.answer-text ul { padding-left: 1.2rem; }
+.answer-text li { margin-bottom: 4px; }
+.answer-text table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.answer-text td { padding: 6px 10px; border-bottom: 1px solid var(--border); }
+
+.qactions {
+  display: flex; gap: 8px; margin-top: 14px;
+}
+.btn {
+  padding: 7px 16px; border-radius: var(--radius2);
+  font-family: 'Sora', sans-serif;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; border: 1px solid transparent;
+}
+.btn-outline { background: transparent; border-color: var(--border2); color: var(--text2); }
+.btn-outline:hover { background: var(--bg4); color: var(--text); }
+.btn-green { background: #4ade8020; border-color: var(--accent); color: var(--accent); }
+.btn-green:hover { background: #4ade8035; }
+.btn-red { background: #f8717120; border-color: var(--danger); color: var(--danger); }
+.btn-red:hover { background: #f8717135; }
+
+/* ---- EMPTY STATE ---- */
+.empty {
+  text-align: center; padding: 80px 20px;
+  color: var(--text3);
+}
+.empty-icon { font-size: 48px; margin-bottom: 16px; }
+.empty h3 { font-size: 18px; color: var(--text2); margin-bottom: 8px; }
+
+/* ---- MOBILE HAMBURGER ---- */
+.hamburger {
+  display: none; background: none; border: none;
+  cursor: pointer; padding: 4px; color: var(--text);
+  font-size: 20px;
+}
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6); z-index: 90;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.25s;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .hamburger { display: block; }
+  .overlay.show { display: block; }
+  .content { padding: 20px 16px; }
+  .topbar { padding: 10px 16px; }
+  .filter-chips { display: none; }
+}
+
+/* ---- HERO HEADER ---- */
+.hero {
+  background: linear-gradient(135deg, #13161e 0%, #1a1e28 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 32px 32px 24px;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 80% 50%, #4ade8008, transparent);
+  pointer-events: none;
+}
+.hero-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 2px;
+  color: var(--accent); font-weight: 600; margin-bottom: 8px;
+}
+.hero-title {
+  font-size: 28px; font-weight: 700; line-height: 1.2;
+  margin-bottom: 6px;
+}
+.hero-sub { font-size: 13px; color: var(--text3); }
+.hero-stats {
+  display: flex; gap: 24px; margin-top: 20px;
+}
+.hstat { text-align: left; }
+.hstat-val {
+  font-size: 24px; font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+.hstat-val.green { color: var(--accent); }
+.hstat-val.red { color: var(--danger); }
+.hstat-val.blue { color: var(--accent2); }
+.hstat-label { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+@media (max-width: 768px) {
+  .hero { padding: 20px 16px 16px; }
+  .hero-title { font-size: 20px; }
+  .hero-stats { gap: 16px; }
+  .hstat-val { font-size: 18px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">
+      MTA <span>/ Imtihon</span>
+    </div>
+  </div>
+
+  <div class="sidebar-title">Mavzular</div>
+  <nav id="nav-topics"></nav>
+
+  <div class="sidebar-stats">
+    <div class="progress-label">
+      <span>Umumiy progress</span>
+      <span id="pct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="pbar"></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-pill green">
+        <span class="num" id="sknown">0</span>bildim
+      </div>
+      <div class="stat-pill red">
+        <span class="num" id="sunknown">0</span>bilmadim
+      </div>
+      <div class="stat-pill gray">
+        <span class="num" id="sunseen">0</span>ko'rilmagan
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="hero" id="hero-section">
+    <button class="hamburger" onclick="openSidebar()">☰</button>
+    <div class="hero-label">Namangan davlat texnika universiteti · 2025–2026</div>
+    <div class="hero-title">Ma'lumotlar tuzilmasi va Algoritmlari</div>
+    <div class="hero-sub">Yakuniy nazorat savollari — 1-kurs tayyorgarlik</div>
+    <div class="hero-stats">
+      <div class="hstat">
+        <div class="hstat-val blue" id="htotal">93</div>
+        <div class="hstat-label">Jami savol</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-val green" id="hknown">0</div>
+        <div class="hstat-label">Bildim</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-val red" id="hunknown">0</div>
+        <div class="hstat-label">Bilmadim</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="topbar">
+    <button class="hamburger" onclick="openSidebar()">☰</button>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search" placeholder="Savol qidirish..." oninput="render()">
+    </div>
+    <div class="filter-chips">
+      <button class="chip active-all" id="chip-all" onclick="setFilter('all')">Hammasi</button>
+      <button class="chip" id="chip-unseen" onclick="setFilter('unseen')">Ko'rilmagan</button>
+      <button class="chip" id="chip-unknown" onclick="setFilter('unknown')">Bilmadim</button>
+      <button class="chip" id="chip-known" onclick="setFilter('known')">Bildim</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="section-header">
+      <div>
+        <div class="section-title" id="sec-title">Barcha savollar</div>
+        <div class="section-sub" id="sec-sub">Javobni ko'rish uchun savolga bosing</div>
+      </div>
+      <div class="count-badge" id="count-badge">93 ta</div>
+    </div>
+    <div class="qgrid" id="qlist"></div>
+  </div>
+</div>
+
+<script>
+const Q = [
+  {t:"Kirish", q:"«Ma'lumotlar tuzilmasi va algoritmlar» fanining maqsad va vazifalari.",
+   a:"<strong>Maqsad:</strong> Talabalarni turli ma'lumotlar tuzilmalari (massiv, ro'yxat, daraxt, graf va h.k.) bilan ishlay olishga, ularni dasturlashda qo'llay olishga o'rgatish.<br><strong>Vazifalar:</strong> Algoritmlarni tahlil qilish, ularning murakkabligini baholash, muammolarga eng samarali yechim tanlashni o'rgatish."},
+  {t:"Kirish", q:"Ma'lumotlar tuzilmasi va algoritmlar — asosiy tushunchalar va ta'riflar.",
+   a:"<strong>Ma'lumotlar tuzilmasi</strong> — ma'lumotlarni kompyuter xotirasida samarali saqlash va ular ustida amallar bajarish usuli.<br><strong>Algoritm</strong> — muayyan masalani hal etish uchun aniq belgilangan, chekli qadam-qadam ko'rsatmalar to'plami.<br><strong>Asosiy tuzilmalar:</strong> massiv, ro'yxat, stek, navbat, daraxt, graf."},
+  {t:"Kirish", q:"Ma'lumotlarni tasvirlash bosqichlari.",
+   a:"<strong>1. Mantiqiy daraja</strong> — ma'lumotlar qanday ko'rinishda tasavvur qilinadi.<br><strong>2. Fizik daraja</strong> — xotirada qanday saqlanadi.<br><strong>3. Implementatsiya</strong> — dasturlash tilida qanday amalga oshiriladi."},
+  {t:"Kirish", q:"Ma'lumotlar tuzilmasini tasniflash.",
+   a:"<ul><li><strong>Chiziqli:</strong> massiv, ro'yxat, stek, navbat</li><li><strong>Nochiziqli:</strong> daraxt, graf</li><li><strong>Statik:</strong> o'lchami o'zgarmas (oddiy massiv)</li><li><strong>Dinamik:</strong> o'lchami o'zgaruvchan (bog'langan ro'yxat)</li></ul>"},
+  {t:"Kirish", q:"Mavhum ma'lumotlar turlari (ADT) nima?",
+   a:"<strong>ADT (Abstract Data Type)</strong> — ma'lumotlar to'plami va ular ustidagi amallarni implementatsiyadan alohida ta'riflash. Masalan, Stek ADT: <code>push</code>, <code>pop</code>, <code>peek</code> amallari — qanday amalga oshirilgani muhim emas, qanday ishlashi muhim."},
+  {t:"Kirish", q:"Ma'lumotni kompyuterda tasvirlash.",
+   a:"Har qanday ma'lumot ikkilik (binary) ko'rinishda 0 va 1 lar orqali saqlanadi.<br><strong>Sonlar:</strong> ikkilik sanoq tizimida<br><strong>Matn:</strong> ASCII yoki Unicode kodlash<br><strong>Rasm/ovoz:</strong> bitlar ketma-ketligi sifatida"},
+  {t:"Kirish", q:"Ma'lumotlar tuzilmasida dasturlash tillarida foydalanish.",
+   a:"Turli tillar turli tuzilmalarni qo'llab-quvvatlaydi:<br><strong>Python:</strong> list, dict, set, tuple — o'rnatilgan<br><strong>C++:</strong> STL (vector, map, stack, queue)<br><strong>Java:</strong> Collections Framework<br>Dasturlash tili tuzilmani yaratish va boshqarishga yordam beradi."},
+  {t:"Kirish", q:"Hisoblash modellari ahamiyati.",
+   a:"Hisoblash modellari algoritmlarni tahlil qilish va solishtirish uchun asos beradi.<br><strong>RAM modeli:</strong> har amal bir qadam<br><strong>Turing mashinasi:</strong> nazariy hisoblash<br>Ular yordamida algoritmning optimal ekanligini isbotlash mumkin."},
+  {t:"Kirish", q:"Ma'lumotlar tuzilmasining tashkil etuvchilari.",
+   a:"<strong>1. Ma'lumotlar (data)</strong> — saqlanadigan qiymatlar<br><strong>2. Aloqalar (relations)</strong> — elementlar orasidagi bog'liqlik<br><strong>3. Amallar (operations)</strong> — qo'shish, o'chirish, qidiruv, o'zgartirish<br><strong>4. Xotira tashkili</strong> — fizik joylashuv"},
+  {t:"Kirish", q:"Murakkab ma'lumotlar tuzilmalari. Misollar keltiring.",
+   a:"<strong>Oddiy tuzilmalardan yaratilgan murakkab tuzilmalar:</strong><br>• <strong>Hesh jadval</strong> — massiv + hesh funksiya<br>• <strong>Heap (Uyum)</strong> — to'liq ikkilik daraxt<br>• <strong>Trie</strong> — satrlar uchun daraxtn tuzilma<br>• <strong>Graf</strong> — umumlashtirilgan daraxt<br>• <strong>Segment daraxti</strong> — intervalli so'rovlar uchun"},
+  {t:"Sanoq tizimlari", q:"Sanoq tizimlari nima? Asosiy turlari.",
+   a:"Sanoq tizimi — sonlarni ifodalash usuli.<br><strong>2-lik (binary):</strong> raqamlar 0, 1 — kompyuter uchun asosiy<br><strong>8-lik (oktal):</strong> raqamlar 0–7<br><strong>10-lik (decimal):</strong> raqamlar 0–9 — kundalik hayot<br><strong>16-lik (hex):</strong> 0–9, A–F — dasturlashda keng ishlatiladi"},
+  {t:"Sanoq tizimlari", q:"Bir sanoq tizimidan ikkinchisiga o'tkazish.",
+   a:"<strong>10→2:</strong> 13 = 1101₂ (13÷2=6 q1, 6÷2=3 q0, 3÷2=1 q1, 1÷2=0 q1 → 1101)<br><strong>2→10:</strong> 1101 = 1×8+1×4+0×2+1×1 = 13<br><strong>2→16:</strong> 4 ta bit = 1 hex raqam: 1101 = D₁₆<br><strong>10→16:</strong> 255 = FF₁₆"},
+  {t:"Sanoq tizimlari", q:"Kompyuterda ma'lumotni saqlashda kodlash usullari.",
+   a:"<strong>ASCII:</strong> 128 ta belgi, 7 bit<br><strong>Unicode/UTF-8:</strong> millionlab belgi, 1–4 bayt<br><strong>BCD:</strong> har bir o'nlik raqam 4 bit bilan<br><strong>Ikkilik to'ldiruvchi (2's complement):</strong> manfiy sonlar uchun<br><strong>IEEE 754:</strong> suzuvchi nuqtali sonlar"},
+  {t:"Algoritmlar", q:"Algoritmlar va ularning murakkabligi.",
+   a:"<strong>Algoritm</strong> — masalani hal qiluvchi qadam-qadam ko'rsatmalar.<br><strong>Vaqt murakkabligi:</strong> kirish hajmi n ga bog'liq operatsiyalar soni<br><strong>Xotira murakkabligi:</strong> qo'shimcha xotira sarfi<br><strong>Eng yaxshi / o'rtacha / eng yomon holat</strong> tahlil qilinadi."},
+  {t:"Algoritmlar", q:"Algoritm turlari va vazifalari.",
+   a:"<strong>Chiziqli:</strong> ketma-ket amallar<br><strong>Tarmoqlanuvchi:</strong> shartga qarab yo'nalish<br><strong>Takrorlanuvchi:</strong> tsikl (for, while)<br><strong>Rekursiv:</strong> o'zini chaqiradi<br><strong>Parallel:</strong> bir vaqtda bir necha amal<br><strong>Distributed:</strong> tarqatilgan tizimlar uchun"},
+  {t:"Algoritmlar", q:"Chiziqli algoritmlar va dastur tuzish.",
+   a:"Shartlar va takrorlashsiz, faqat ketma-ket bajariladigan amallar.<br><strong>Misol — ikki sonning yig'indisi:</strong><br><code>a = int(input('a: '))</code><br><code>b = int(input('b: '))</code><br><code>s = a + b</code><br><code>print('Yig\\'indi:', s)</code>"},
+  {t:"Algoritmlar", q:"Algoritm xossalari va imkoniyatlari.",
+   a:"<strong>1. Diskretlilik</strong> — qadam-qadam<br><strong>2. Aniqlik</strong> — har bir qadam tushunarli<br><strong>3. Cheklilik</strong> — chekli qadamda tugaydi<br><strong>4. Ommaviylik</strong> — shu turdagi barcha masalalar uchun<br><strong>5. Natijavilik</strong> — natija beradi<br><strong>6. Samaradorlik</strong> — minimal resurs sarflaydi"},
+  {t:"Algoritmlar", q:"Tarmoqlanuvchi algoritmlar va dastur tuzish.",
+   a:"Shart asosida turli yo'nalishda davom etadigan algoritm.<br><strong>Misol:</strong><br><code>x = int(input())</code><br><code>if x > 0:</code><br><code>&nbsp;&nbsp;print('musbat')</code><br><code>elif x &lt; 0:</code><br><code>&nbsp;&nbsp;print('manfiy')</code><br><code>else:</code><br><code>&nbsp;&nbsp;print('nol')</code>"},
+  {t:"Algoritmlar", q:"Algoritmlarni afzalliklari.",
+   a:"• Murakkab masalalarni bosqichma-bosqich yechish<br>• Dastur samaradorligini oshirish<br>• Kodni qayta ishlatish imkoniyati<br>• Xatolarni kamaytirish<br>• Tizimli fikrlashni rivojlantirish<br>• Turli xil platforma va tillarda qo'llash mumkin"},
+  {t:"Algoritmlar", q:"Hisoblashda algoritmlarning roli.",
+   a:"Algoritmlar kompyuter dasturlarining asosi.<br>• Qidiruv tizimlari (Google) — qidiruv algoritmlari<br>• Shifrlash — kriptografik algoritmlar<br>• Navigatsiya — eng qisqa yo'l algoritmlari<br>• Tavsiya tizimlari — filtrlash algoritmlari<br>Algoritmsiz dastur yo'q."},
+  {t:"Algoritmlar", q:"Algoritmlarni tasvirlash usullari va misollar keltiring.",
+   a:"<strong>1. So'z bilan:</strong> oddiy tavsif<br><strong>2. Blok-sxema:</strong> grafik (to'rtburchak=amal, romb=shart, oval=boshlash/tugash)<br><strong>3. Psevdokod:</strong> dasturlashga o'xshash rasmiy bo'lmagan yozuv<br><strong>4. Dasturlash tilida:</strong> Python, C++ va h.k.<br><strong>Misol (max son):</strong><br><code>if a > b: max = a</code><br><code>else: max = b</code>"},
+  {t:"Algoritmlar", q:"Takrorlanuvchi algoritm va dastur tuzish.",
+   a:"Biror shart bajarilguncha yoki ma'lum marta takrorlanadigan algoritm.<br><strong>Misol (1 dan 10 gacha yig'indi):</strong><br><code>s = 0</code><br><code>for i in range(1, 11):</code><br><code>&nbsp;&nbsp;s += i</code><br><code>print(s)  # 55</code>"},
+  {t:"Algoritmlar", q:"Algoritmlarni tahlil qilish.",
+   a:"<strong>Maqsad:</strong> algoritmning samaradorligini aniqlash.<br><strong>Vaqt tahlili:</strong> operatsiyalar sonini n ga nisbatan ifodalash<br><strong>Xotira tahlili:</strong> qo'shimcha xotira<br><strong>Usullar:</strong> empirik (o'lchash), nazariy (Big O), amortizatsiyalangan tahlil"},
+  {t:"Algoritmlar", q:"Big O tushunchasi va turlari.",
+   a:"<strong>Big O</strong> — eng yomon holat murakkablik.<br><code>O(1)</code> — doimiy (massiv indeks)<br><code>O(log n)</code> — ikkilik qidiruv<br><code>O(n)</code> — chiziqli qidiruv<br><code>O(n log n)</code> — merge sort<br><code>O(n²)</code> — bubble sort<br><code>O(2ⁿ)</code> — rekursiv Fibonacci<br><code>O(n!)</code> — permutatsiya"},
+  {t:"Algoritmlar", q:"Algoritmlarning o'lchamlari.",
+   a:"<strong>Vaqt murakkabligi:</strong> dastur qancha vaqt ishlaydi<br><strong>Xotira murakkabligi:</strong> qancha xotira ishlatadi<br><strong>Kirish hajmi (n):</strong> asosiy parametr<br>Munosabat: n qanchalik katta bo'lsa, algoritmlar farqi shunchalik seziladi."},
+  {t:"Algoritmlar", q:"Chiziqli algoritmning blok-sxemada ifodalanishi. Misol keltiring.",
+   a:"<strong>Blok-sxema elementlari:</strong><br>🔵 Oval — boshlash/tugash<br>🟦 To'rtburchak — amal (hisoblab)<br>◇ Romb — shart (yo'q)<br>/ / Parallelogram — kirish/chiqish<br><strong>Misol: a+b</strong><br>Oval(Boshlash) → Parallelogram(a,b o'qi) → To'rtburchak(s=a+b) → Parallelogram(s chiqarish) → Oval(Tugash)"},
+  {t:"Algoritmlar", q:"Tarmoqlanuvchi algoritmlarning turlari va farqlari. Misol keltiring.",
+   a:"<strong>To'liq tarmoqlanish (if-else):</strong> ikkita yo'l, har doim biri bajariladi<br><strong>To'liqsiz (if):</strong> faqat shart bajarilganda<br><strong>Ko'p tarmoq (if-elif-else):</strong> 3+ yo'l<br><strong>Tanlash (match-case):</strong> bir o'zgaruvchiga asoslangan<br><code>match day:</code><br><code>&nbsp;&nbsp;case 1: print('Dushanba')</code><br><code>&nbsp;&nbsp;case 2: print('Seshanba')</code>"},
+  {t:"Algoritmlar", q:"Takrorlanuvchi algoritmlarning turlari va farqlari. Misollar keltiring.",
+   a:"<strong>for tsikli:</strong> takrorlash soni ma'lum<br><code>for i in range(5): print(i)</code><br><strong>while tsikli:</strong> shart bajarilguncha<br><code>while x > 0: x -= 1</code><br><strong>Farqi:</strong> for — hisoblagich bor; while — faqat shart. Python-da <code>do-while</code> yo'q, <code>while True: ... break</code> bilan almashtiriladi."},
+  {t:"Algoritmlar", q:"Takrorlanuvchi algoritmlarning blok-sxemada ifodalanishi.",
+   a:"<strong>for tsikl blok-sxemasi:</strong><br>Oval → i=0 → Romb(i&lt;n?) → [ha] → To'rtburchak(amal) → i++ → Romb ga qaytish → [yo'q] → Oval(Tugash)<br><strong>while tsikl:</strong><br>Oval → Romb(shart?) → [ha] → amal → Romb ga qaytish → [yo'q] → Oval(Tugash)"},
+  {t:"Ma'lumot turlari", q:"Ma'lumotlarning abstrakt turlari.",
+   a:"ADT — implementatsiyadan alohida ta'riflangan tuzilma.<br><strong>Misollar:</strong><br>• Stek ADT: push, pop, isEmpty, peek<br>• Navbat ADT: enqueue, dequeue, front<br>• Ro'yxat ADT: insert, delete, search, get<br>ADT foydalanuvchiga implementatsiya detallarini yashiradi."},
+  {t:"Ma'lumot turlari", q:"Ma'lumotlarning standart turlari.",
+   a:"<strong>Python standart turlari:</strong><br><code>int</code> — butun son<br><code>float</code> — haqiqiy son<br><code>str</code> — satr<br><code>bool</code> — mantiqiy (True/False)<br><code>complex</code> — kompleks son<br><code>bytes</code> — baytlar ketma-ketligi<br><code>NoneType</code> — bo'sh qiymat"},
+  {t:"Ma'lumot turlari", q:"Butun sonli ma'lumotlar tuzilmalari.",
+   a:"<strong>int:</strong> Python-da cheksiz kattalikdagi butun son<br><strong>Xotirada:</strong> ikkilik to'ldiruvchi (2's complement) usulida<br><strong>C/C++:</strong> int (4 bayt, -2³¹ dan 2³¹-1 gacha)<br><strong>Amallar:</strong> +, -, *, //, %, ** va bit amallari (&, |, ^, <<, >>)"},
+  {t:"Ma'lumot turlari", q:"Ma'lumot tuzilmasining oddiy turlari. Misol keltiring.",
+   a:"<strong>Oddiy (primitiv) turlar:</strong><br>• int: <code>x = 42</code><br>• float: <code>pi = 3.14</code><br>• char/str: <code>c = 'A'</code><br>• bool: <code>flag = True</code><br>Bu turlar bevosita qiymat saqlaydi, boshqa tuzilmalardan farqli o'laroq."},
+  {t:"Ma'lumot turlari", q:"String ma'lumotlar tuzilmalari.",
+   a:"<strong>String</strong> — belgilar ketma-ketligi.<br><code>s = 'Salom'</code><br><code>s[0]  # 'S'</code><br><code>s[1:4]  # 'ala'</code><br><code>len(s)  # 5</code><br><strong>Amallar:</strong> birlashtirish (+), takrorlash (*), qidirish (in), split, join, upper, lower, replace"},
+  {t:"Ma'lumot turlari", q:"Statik turdagi ma'lumotlar tuzilmasi. Misollar keltiring.",
+   a:"O'lchami oldindan belgilangan, ish vaqtida o'zgarmaydigan tuzilma.<br><strong>Misollar:</strong><br>• C: <code>int a[10];</code><br>• Python tuple: <code>t = (1, 2, 3)</code> — o'zgartirib bo'lmaydi<br><strong>Afzalligi:</strong> tezroq, xotira oldindan ajratiladi<br><strong>Kamchiligi:</strong> o'lchamni oldindan bilish kerak"},
+  {t:"Ma'lumot turlari", q:"Ma'lumotlarning toifalari va misollar keltiring.",
+   a:"<strong>1. Primitiv:</strong> int, float, char, bool<br><strong>2. Kompozit:</strong> massiv, yozuv (struct)<br><strong>3. Abstrakt:</strong> stek, navbat, daraxt<br><strong>4. Chiziqli:</strong> ketma-ket joylashgan (list, array)<br><strong>5. Nochiziqli:</strong> ierarxik (tree, graph)"},
+  {t:"Massivlar", q:"Massiv va uning turlari.",
+   a:"<strong>Massiv</strong> — bir xil turdagi elementlar, xotirada ketma-ket joylashgan.<br><strong>Turlari:</strong><br>• <strong>Bir o'lchovli:</strong> <code>a = [1, 2, 3]</code><br>• <strong>Ikki o'lchovli:</strong> <code>m = [[1,2],[3,4]]</code><br>• <strong>Ko'p o'lchovli</strong><br>• <strong>Statik</strong> — C: int a[5]<br>• <strong>Dinamik</strong> — Python list"},
+  {t:"Massivlar", q:"Massivlardan foydalanish.",
+   a:"<code>a = [10, 20, 30, 40, 50]</code><br><code>a[0]     # 10 — kirish O(1)</code><br><code>a.append(60)  # qo'shish</code><br><code>a.insert(2, 99)  # o'rtaga kiritish</code><br><code>a.remove(20)  # o'chirish</code><br><code>for x in a: print(x)  # aylanish</code>"},
+  {t:"Massivlar", q:"Massivlar va ular ustida amallar.",
+   a:"• <strong>Kirish O(1):</strong> <code>a[i]</code><br>• <strong>Qo'shish oxiriga O(1):</strong> <code>append(x)</code><br>• <strong>Qo'shish o'rtaga O(n):</strong> siljitish kerak<br>• <strong>O'chirish O(n):</strong> bo'shliqni to'ldirish<br>• <strong>Qidiruv O(n):</strong> chiziqli (saralanmagan)<br>• <strong>Ikkilik qidiruv O(log n):</strong> saralangan massiv uchun"},
+  {t:"Massivlar", q:"Ko'p o'lchovli massivlar.",
+   a:"Massiv ichida massiv. <strong>2D massiv</strong> — jadval ko'rinishida.<br><code>m = [[1,2,3],[4,5,6],[7,8,9]]</code><br><code>m[1][2]  # → 6</code><br><strong>3D:</strong> <code>t[i][j][k]</code><br><strong>Xotirada:</strong> qator-qator (row-major) yoki ustun-ustun (column-major)"},
+  {t:"Massivlar", q:"Statik va dinamik massivlarning farqi. Misollar keltiring.",
+   a:"<table><tr><td><strong>Statik</strong></td><td><strong>Dinamik</strong></td></tr><tr><td>O'lchami oldindan belgilangan</td><td>O'lchami o'zgaruvchan</td></tr><tr><td>int a[10] (C)</td><td>list (Python), vector (C++)</td></tr><tr><td>Tezroq, kam xotira sarfi</td><td>Moslashuvchan</td></tr><tr><td>Stack da saqlanadi</td><td>Heap da saqlanadi</td></tr></table>"},
+  {t:"Massivlar", q:"Massiv ma'lumotlar tuzilmasi va xotirada joylashuvi. Misol keltiring.",
+   a:"Massiv elementlari xotirada <strong>ketma-ket</strong> joylashadi.<br><strong>Formula:</strong> <code>a[i]</code> manzili = <code>base_addr + i × element_size</code><br><strong>Misol:</strong> int massiv, base=1000, size=4<br><code>a[0] = 1000</code><br><code>a[1] = 1004</code><br><code>a[2] = 1008</code><br>Shuning uchun kirish O(1)."},
+  {t:"To'plam", q:"To'plam tushunchasi va uning ustida amallar.",
+   a:"<strong>To'plam (Set)</strong> — takrorlanmaydigan elementlar to'plami.<br><code>s = {1, 2, 3, 4}</code><br><strong>Amallar:</strong><br><code>s.add(5)</code> — qo'shish<br><code>s.remove(2)</code> — o'chirish<br><code>s.union({5,6})</code> — birlashtirish<br><code>s.intersection({3,4,5})</code> — kesishma"},
+  {t:"To'plam", q:"To'plamdagi operatorlar va imkoniyatlari. Misol keltiring.",
+   a:"<code>A | B</code> — birlashtirish (union): A va B dagi barcha<br><code>A & B</code> — kesishma: ikkalasida bor<br><code>A - B</code> — farq: A da bor, B da yo'q<br><code>A ^ B</code> — simmetrik farq: faqat bittasida bor<br><code>3 in A</code> — a'zolik O(1)<br><strong>Misol:</strong> <code>{1,2,3} | {3,4} = {1,2,3,4}</code>"},
+  {t:"To'plam", q:"To'plamda Superset metodi va Pythonda ifodalanishi. Misol keltiring.",
+   a:"<strong>Superset</strong> — A to'plam B ning barcha elementlarini o'z ichiga olsa.<br><code>A.issuperset(B)</code> yoki <code>A >= B</code><br><strong>Misol:</strong><br><code>A = {1, 2, 3, 4, 5}</code><br><code>B = {2, 3}</code><br><code>A.issuperset(B)  # → True</code><br><code>B.issuperset(A)  # → False</code>"},
+  {t:"To'plam", q:"To'plamda Subset metodi va Pythonda ifodalanishi. Misol keltiring.",
+   a:"<strong>Subset</strong> — A ning barcha elementlari B da ham bor bo'lsa.<br><code>A.issubset(B)</code> yoki <code>A <= B</code><br><strong>Misol:</strong><br><code>A = {2, 3}</code><br><code>B = {1, 2, 3, 4, 5}</code><br><code>A.issubset(B)  # → True</code><br><code>A <= B         # → True</code>"},
+  {t:"Yozuvlar", q:"Ma'lumotlar tuzilmasida yozuvlar. Misol keltiring.",
+   a:"<strong>Yozuv (record/struct)</strong> — turli tipli maydonlardan tashkil topgan ma'lumot tuzilmasi.<br><strong>Python dict:</strong><br><code>student = {</code><br><code>&nbsp;&nbsp;'ism': 'Ali',</code><br><code>&nbsp;&nbsp;'yosh': 20,</code><br><code>&nbsp;&nbsp;'baho': 4.5</code><br><code>}</code><br>Har bir maydon alohida nomga ega."},
+  {t:"Yozuvlar", q:"Yozuvlarning xususiyatlari. Misol keltiring.",
+   a:"• Har xil tipli maydonlar bir tuzilmada<br>• Maydonga nom orqali murojaat<br>• Bir nechta yozuv — jadval (table)<br>• <strong>Python usullari:</strong> dict, namedtuple, dataclass<br>• Ma'lumotlar bazasi jadvallarining asosi<br><code>student['ism']  # 'Ali'</code>"},
+  {t:"Yozuvlar", q:"Pythonda yozuvlarni yaratish usullari. Misol keltiring.",
+   a:"<strong>1. dict:</strong><br><code>p = {'ism': 'Ola', 'yosh': 21}</code><br><strong>2. namedtuple:</strong><br><code>from collections import namedtuple</code><br><code>Person = namedtuple('Person', ['ism', 'yosh'])</code><br><code>p = Person('Ola', 21); p.ism</code><br><strong>3. dataclass:</strong><br><code>@dataclass</code><br><code>class Person: ism: str; yosh: int</code>"},
+  {t:"Hesh jadval", q:"Hesh jadvallar va ularni e'lon qilish.",
+   a:"<strong>Hesh jadval</strong> — kalit→qiymat juftlarini O(1) da saqlovchi tuzilma.<br>Kalit hesh funksiya orqali indeksga aylantiriladi.<br><strong>Python:</strong><br><code>d = {'a': 1, 'b': 2, 'c': 3}</code><br><code>d['a']  # → 1, O(1)</code><br><strong>To'qnashuv:</strong> zanjir yoki ochiq adreslash bilan hal qilinadi."},
+  {t:"Rekursiya", q:"Rekursiv ma'lumotlar tuzilmasi.",
+   a:"O'ziga o'xshash kichikroq qismlardan tashkil topgan tuzilma.<br><strong>Misollar:</strong><br>• <strong>Bog'langan ro'yxat:</strong> har tugun keyingiga ishora qiladi<br>• <strong>Daraxt:</strong> har tugun quyi daraxtlarga ega<br>• <strong>Graf:</strong> tugunlar va qirralar<br>• <strong>Fraktallar:</strong> o'z-o'ziga o'xshash geometrik shakllar"},
+  {t:"Rekursiya", q:"Rekursiya haqida tushuncha.",
+   a:"<strong>Rekursiya</strong> — funksiyaning o'zini o'zi chaqirishi.<br><strong>Ikki shart kerak:</strong><br>1. <strong>Asosiy holat (base case)</strong> — to'xtatadi<br>2. <strong>Rekursiv holat</strong> — kichraytiradi<br><strong>Misol:</strong><br><code>def f(n):</code><br><code>&nbsp;&nbsp;if n == 0: return 1  # base case</code><br><code>&nbsp;&nbsp;return n * f(n-1)   # rekursiv</code>"},
+  {t:"Rekursiya", q:"Rekursiv algoritmlar.",
+   a:"Rekursiyaga asoslangan algoritmlar:<br>• <strong>Factorial:</strong> n! = n × (n-1)!<br>• <strong>Fibonacci:</strong> F(n) = F(n-1) + F(n-2)<br>• <strong>Ikkilik qidiruv</strong> (rekursiv variant)<br>• <strong>Merge sort, Quick sort</strong><br>• <strong>Daraxt aylanish</strong> (traversal)<br>• <strong>Hanoi minoralari</strong>"},
+  {t:"Rekursiya", q:"Rekursiv funksiyalar. Misol keltiring.",
+   a:"<strong>Factorial:</strong><br><code>def factorial(n):</code><br><code>&nbsp;&nbsp;if n == 0: return 1</code><br><code>&nbsp;&nbsp;return n * factorial(n-1)</code><br><br><strong>Fibonacci:</strong><br><code>def fib(n):</code><br><code>&nbsp;&nbsp;if n &lt;= 1: return n</code><br><code>&nbsp;&nbsp;return fib(n-1) + fib(n-2)</code><br><br><code>factorial(5)  # → 120</code>"},
+  {t:"Ro'yxat", q:"Ro'yxat ko'rinishidagi ma'lumotlar tuzilmasi.",
+   a:"<strong>Ro'yxat (List)</strong> — tartibli, indeksli, o'zgaruvchan elementlar to'plami.<br>Python-da: <code>a = [1, 'salom', 3.14, True]</code><br><strong>Amallar:</strong> append, insert, remove, pop, index, sort, reverse, len, min, max"},
+  {t:"Ro'yxat", q:"Ro'yxatlar haqida tushuncha.",
+   a:"<strong>Chiziqli tuzilma</strong> — elementlar ketma-ket joylashgan.<br>• <strong>Python list:</strong> dinamik, har xil tipli elementlar<br>• <strong>Massivdan farqi:</strong> turli tiplar, dinamik o'sish<br>• Indeks bilan kirish: <code>a[i]</code> — O(1)<br>• Qidiruv: O(n)"},
+  {t:"Ro'yxat", q:"Bog'langan ro'yxatlar haqida tushuncha.",
+   a:"<strong>Bog'langan ro'yxat (Linked List)</strong> — har bir <strong>tugun (node)</strong> qiymat va keyingi tugunni ko'rsatuvchi <strong>pointer</strong> dan iborat.<br><code>head → [1|→] → [2|→] → [3|None]</code><br>• Kirish: O(n) — boshidan yurib borish kerak<br>• Qo'shish/o'chirish boshiga: O(1)"},
+  {t:"Ro'yxat", q:"Bog'langan ro'yxatlar klassifikatsiyasi.",
+   a:"• <strong>Bir yo'nalishli (Singly):</strong> faqat oldinga ko'rsatish<br>• <strong>Ikki yo'nalishli (Doubly):</strong> oldinga ham, orqaga ham<br>• <strong>Aylana (Circular Singly):</strong> oxirgi birinchiga ko'rsatadi<br>• <strong>Aylana ikki yo'nalishli (Circular Doubly)</strong>"},
+  {t:"Ro'yxat", q:"Bog'langan ro'yxatlar ustida amallar.",
+   a:"• <strong>Boshiga qo'shish O(1)</strong><br>• <strong>Oxiriga qo'shish O(n)</strong> (yoki O(1) tail pointer bilan)<br>• <strong>O'chirish O(n)</strong> — avval topish kerak<br>• <strong>Qidiruv O(n)</strong><br>• <strong>Massivdan afzalligi:</strong> qo'shish/o'chirish uchun siljitish kerak emas"},
+  {t:"Ro'yxat", q:"Nochiziqli ma'lumotlar tuzilmasi klassifikatsiyasi.",
+   a:"Elementlar ierarxik yoki tarmoqli tartibda joylashgan tuzilmalar:<br>• <strong>Daraxt (Tree):</strong> ildiz va quyi daraxtlar<br>• <strong>Graf (Graph):</strong> tugunlar va qirralar<br>• <strong>Heap:</strong> to'liq ikkilik daraxt<br>• <strong>Trie:</strong> satrlar uchun daraxt<br>Chiziqli tuzilmalardan farqli — ko'p yo'nalish bor"},
+  {t:"Ro'yxat", q:"Chiziqli ma'lumotlar tuzilmasi klassifikatsiyasi.",
+   a:"Elementlar ketma-ket joylashgan tuzilmalar:<br>• <strong>Massiv (Array)</strong><br>• <strong>Bog'langan ro'yxat (Linked List)</strong><br>• <strong>Stek (Stack)</strong><br>• <strong>Navbat (Queue)</strong><br>• <strong>Deque (Ikki tomonlama navbat)</strong><br>Har bir elementning oldingi/keyingisi bor (yoki biri None)."},
+  {t:"Stek", q:"Stek ma'lumotlar tuzilmasi.",
+   a:"<strong>Stek (Stack)</strong> — LIFO (Last In First Out): oxirgi kirgani birinchi chiqadi.<br><strong>Amallar:</strong><br>• <code>push(x)</code> — tepaga qo'shish O(1)<br>• <code>pop()</code> — tepadan olish O(1)<br>• <code>peek()</code> — tepani ko'rish O(1)<br><strong>Misol:</strong> brauzer orqaga tugmasi, funksiya steki"},
+  {t:"Stek", q:"Stek va ular ustida bajariladigan algoritmlar.",
+   a:"Stekdan foydalanadigan algoritmlar:<br>• <strong>Qavslarni tekshirish:</strong> push oching, pop yoping<br>• <strong>Infix→Postfix</strong> o'tkazish<br>• <strong>Postfix hisoblash</strong><br>• <strong>Daraxt pre-order traversal</strong> (iterativ)<br>• <strong>Undo/Redo</strong> funksiyalari"},
+  {t:"Stek", q:"Python dasturlash tilida steklar.",
+   a:"<strong>list bilan:</strong><br><code>stack = []</code><br><code>stack.append(1)  # push</code><br><code>stack.append(2)</code><br><code>stack.pop()  # → 2 (LIFO)</code><br><br><strong>deque bilan (tezroq):</strong><br><code>from collections import deque</code><br><code>s = deque()</code><br><code>s.append(1); s.pop()</code>"},
+  {t:"Navbat", q:"Navbat ma'lumotlar tuzilmasi.",
+   a:"<strong>Navbat (Queue)</strong> — FIFO (First In First Out): birinchi kirgani birinchi chiqadi.<br><strong>Amallar:</strong><br>• <code>enqueue(x)</code> — oxiriga qo'shish O(1)<br>• <code>dequeue()</code> — boshidan olish O(1)<br>• <code>front()</code> — oldingini ko'rish O(1)<br><strong>Misol:</strong> printer navbati, CPU jarayonlar"},
+  {t:"Navbat", q:"Navbat va ular ustida bajariladigan algoritmlar.",
+   a:"Navbatdan foydalanadigan algoritmlar:<br>• <strong>BFS (Breadth-First Search)</strong> — graflarda<br>• <strong>Level-order traversal</strong> — daraxda<br>• <strong>Printer spooling</strong><br>• <strong>CPU jarayon rejalashtirish</strong><br>• <strong>Kesh (Cache) boshqaruvi</strong>"},
+  {t:"Navbat", q:"Python dasturlash tilida navbatlar.",
+   a:"<code>from collections import deque</code><br><code>q = deque()</code><br><code>q.append(1)    # enqueue — oxiriga</code><br><code>q.append(2)</code><br><code>q.popleft()   # → 1 (FIFO)</code><br><br>List ham ishlaydi lekin <code>pop(0)</code> O(n) — <strong>deque tavsiya etiladi</strong> O(1) uchun."},
+  {t:"Daraxt", q:"Daraxt ma'lumotlar tuzilmasi.",
+   a:"<strong>Daraxt (Tree)</strong> — ierarxik, nochiziqli tuzilma. Bir ildiz va quyi daraxtlardan tashkil topgan.<br><strong>Asosiy atamalar:</strong><br>• <strong>Ildiz (root)</strong> — bosh tugun<br>• <strong>Barg (leaf)</strong> — farzandsiz tugun<br>• <strong>Ichki tugun</strong> — kamida bir farzand bor<br>• <strong>Balandlik (height)</strong>"},
+  {t:"Daraxt", q:"Daraxt ma'lumotlar tuzilmasining asosiy tushunchasi.",
+   a:"<strong>Tuzilma:</strong> G = (V, E) — tugunlar va qirralar, lekin tsikl yo'q.<br><strong>Xossalar:</strong><br>• n ta tugun, n-1 ta qirra<br>• Har bir tugunga bitta yo'l<br>• Ildizdan bargga yo'nalgan<br><strong>Daraja (degree):</strong> tugunning farzandlar soni"},
+  {t:"Daraxt", q:"Daraxt ma'lumotlar tuzilmasining turlari va tasvirlash.",
+   a:"• <strong>Ikkilik daraxt:</strong> max 2 farzand<br>• <strong>BST:</strong> chap < ildiz < o'ng<br>• <strong>AVL daraxt:</strong> muvozanatli BST, O(log n) kafolatlangan<br>• <strong>Heap:</strong> to'liq ikkilik, max/min-heap<br>• <strong>B-tree:</strong> ko'p farzandli, DB uchun<br>• <strong>Trie:</strong> satrlar qidiruvi"},
+  {t:"Daraxt", q:"Ma'lumotlar tuzilmasida ikkilik qidiruv daraxtlar.",
+   a:"<strong>BST (Binary Search Tree)</strong>:<br>• Har tugun uchun: chap quyi daraxt < tugun < o'ng quyi daraxt<br>• <strong>Qidiruv:</strong> O(log n) o'rtacha<br>• <strong>Kiritish:</strong> O(log n)<br>• <strong>O'chirish:</strong> O(log n)<br>Muvozanatsiz holda — O(n) (zanjir shakl)"},
+  {t:"Daraxt", q:"Ma'lumotlar tuzilmasining ikkilik qidiruv daraxti xususiyati.",
+   a:"Har bir tugun uchun qat'iy shart:<br>• <strong>Chap quyi daraxt</strong> barcha elementlari < tugun qiymati<br>• <strong>O'ng quyi daraxt</strong> barcha elementlari > tugun qiymati<br>• <strong>In-order traversal</strong> saralangan ketma-ket beradi<br>• Dublikat qiymatlar odatda qo'shilmaydi"},
+  {t:"Daraxt", q:"Ma'lumotlar tuzilmasining ikkilik daraxtdagi asosiy amallar.",
+   a:"<strong>Kiritish:</strong> to'g'ri joyga solishtirish orqali O(log n)<br><strong>Qidiruv:</strong> < — chap, > — o'ng O(log n)<br><strong>O'chirish — 3 holat:</strong><br>1. Barg — shunchaki o'chir<br>2. 1 farzandli — farzand bilan almashtir<br>3. 2 farzandli — in-order successor bilan almashtir<br><strong>Traversal:</strong> In-order, Pre-order, Post-order"},
+  {t:"Graf", q:"Ma'lumotlar tuzilmasining graflar nazariyasi elementlari va o'tish algoritmlari.",
+   a:"<strong>Graf G = (V, E)</strong>: V — tugunlar, E — qirralar to'plami.<br><strong>O'tish algoritmlari:</strong><br>• <strong>BFS (Kenglik bo'yicha):</strong> navbat ishlatadi, O(V+E)<br>• <strong>DFS (Chuqurlik bo'yicha):</strong> stek/rekursiya, O(V+E)<br>BFS — eng qisqa yo'l; DFS — tsikl topish, topologik tartib"},
+  {t:"Graf", q:"Ma'lumotlar tuzilmasida graflar nazariyasi tushunchasi.",
+   a:"<strong>Graf</strong> — tugunlar (vertex) va ular orasidagi qirralar (edge) dan iborat tuzilma.<br><strong>Turlari:</strong><br>• <strong>Yo'naltirilgan (directed)</strong> — qirralar yo'nalishli<br>• <strong>Yo'naltirilmagan</strong> — ikki tomonga<br>• <strong>Og'irlikli (weighted)</strong> — qirralarda son<br>• <strong>Aktsiklik (DAG)</strong> — tsikl yo'q"},
+  {t:"Graf", q:"Ma'lumotlar tuzilmasining graflarni tasvirlash usullari.",
+   a:"<strong>1. Qo'shnilik matritsasi:</strong><br><code>adj[i][j] = 1</code> qirra bor<br>• Xotira: O(V²), kirish O(1)<br><strong>2. Qo'shnilik ro'yxati:</strong><br>Har tugun uchun qo'shnilar ro'yxati<br>• Xotira: O(V+E), tezroq kam qirrali graflarda<br><strong>3. Qirralar ro'yxati:</strong> <code>[(u,v,w)]</code>"},
+  {t:"Graf", q:"Graflar uchun ma'lumotlar tuzilmalari.",
+   a:"<strong>Qo'shnilik matritsasi:</strong> 2D massiv, zichroq graflar uchun<br><strong>Qo'shnilik ro'yxati:</strong> list of lists / dict, siyrak graflar uchun<br><strong>Python:</strong><br><code>g = {0: [1,2], 1: [2], 2: [3], 3: []}</code><br>Bu — yo'naltirilgan grafning qo'shnilik ro'yxati"},
+  {t:"Graf", q:"Eng qisqa yo'l algoritmlarining o'zgarishlari.",
+   a:"• <strong>Dijkstra:</strong> og'irlikli, manfiy yo'q, O((V+E)log V)<br>• <strong>Bellman-Ford:</strong> manfiy og'irliklar ham, O(VE)<br>• <strong>Floyd-Warshall:</strong> barcha juftlar, O(V³)<br>• <strong>A* (A-star):</strong> heuristika bilan, yo'l topish<br>• <strong>BFS:</strong> og'irliksiz grafda, O(V+E)"},
+  {t:"Saralash", q:"Saralash algoritmlarining turlari.",
+   a:"• <strong>Bubble sort:</strong> O(n²), solishtirish va almashtirish<br>• <strong>Selection sort:</strong> O(n²), minimal topish<br>• <strong>Insertion sort:</strong> O(n²), kichik massivda yaxshi<br>• <strong>Merge sort:</strong> O(n log n), barqaror, qo'shimcha xotira<br>• <strong>Quick sort:</strong> O(n log n) o'rtacha, O(n²) eng yomoni<br>• <strong>Heap sort:</strong> O(n log n)"},
+  {t:"Saralash", q:"Birlashtirish (Merge) algoritmlari.",
+   a:"<strong>Merge Sort</strong> — Bo'lib tashla va birlashtir (Divide & Conquer):<br>1. Massivni ikkiga bo'l (O(log n) daraja)<br>2. Har yarimni rekursiv sarat<br>3. Saralangan yarimlari birlashtir (O(n))<br><strong>Jami:</strong> O(n log n) — barcha holatlarda<br><strong>Xotira:</strong> O(n) qo'shimcha, barqaror saralash"},
+  {t:"Qator", q:"Qator algoritmlari va turlari.",
+   a:"<strong>Qator (String) algoritmlari:</strong><br>• <strong>Qidiruv:</strong> Naive O(n·m), KMP O(n+m)<br>• <strong>Teskari aylantirish:</strong> O(n)<br>• <strong>Palindrom tekshirish:</strong> O(n)<br>• <strong>Saralash:</strong> leksikografik<br>• <strong>LCS (Longest Common Subsequence):</strong> dinamik dasturlash"},
+  {t:"Qator", q:"Qatorlarni moslashtirish algoritmlari.",
+   a:"• <strong>Naive:</strong> har pozitsiyadan sinash, O(n·m)<br>• <strong>KMP (Knuth-Morris-Pratt):</strong> prefiks jadvali, O(n+m)<br>• <strong>Boyer-Moore:</strong> o'ngdan chapga, amalda eng tez<br>• <strong>Rabin-Karp:</strong> hesh asosida, O(n+m) o'rtacha<br><strong>n</strong> — matn uzunligi, <strong>m</strong> — naqsh uzunligi"},
+  {t:"Qator", q:"Qatorlarni saqlash uchun ma'lumotlar tuzilmalari.",
+   a:"• <strong>Char massivi:</strong> C da null-terminated string<br>• <strong>Python str:</strong> o'zgarmas (immutable) ketma-ket<br>• <strong>StringBuilder:</strong> Java-da samarali qo'shish<br>• <strong>Trie:</strong> ko'p qatorlarni saqlash, prefix qidiruv O(m)<br>• <strong>Suffix Array/Tree:</strong> pattern matching uchun"},
+  {t:"Qator", q:"Qatorlar uchun hesh jadvallari.",
+   a:"Qatorlarni kalit sifatida hesh jadvalda saqlash:<br><code>d = {'salom': 1, 'dunyo': 2}</code><br>• <strong>Hesh:</strong> qator belgilaridan hesh qiymat hisoblanadi<br>• <strong>Qidiruv:</strong> O(1) o'rtacha<br>• <strong>Foydalanish:</strong> so'zlar chastotasi, anagramlar topish"},
+  {t:"Qator", q:"Qatorlar uchun ikkilik qidiruv daraxtlari.",
+   a:"BST-da qatorlar leksikografik tartibda saqlanadi:<br>• <strong>Insert/Search:</strong> O(m·log n) — m qator uzunligi, n tugunlar<br>• <strong>Afzalligi:</strong> saralangan ketma-ket chiqarish oson<br>• <strong>Trie bilan farqi:</strong> BST umumiy; Trie prefix qidiruv uchun maxsus"},
+  {t:"Graf", q:"Grafda A→G eng qisqa yo'l (Dijkstra, HEMIS raqami A-B masofa).",
+   a:"<strong>Dijkstra algoritmi qadamlari:</strong><br>1. Barcha tugunlarga masofa = ∞, A = 0<br>2. Ko'rilmagan tugunlardan eng kichik masofaligini tanlash<br>3. Qo'shnilarini yangilash (relax): <code>dist[v] = min(dist[v], dist[u]+w)</code><br>4. G ga etguncha davom etish<br><em>A-B orasiga HEMIS raqamingizni qo'ying, qolganlarni ixtiyoriy tanlang.</em>"}
+];
+
+let status = {};
+let filter = 'all';
+let topic = 'Hammasi';
+
+function saveStatus() {
+  try { localStorage.setItem('mta_status', JSON.stringify(status)); } catch(e) {}
+}
+function loadStatus() {
+  try {
+    const s = localStorage.getItem('mta_status');
+    if(s) status = JSON.parse(s);
+  } catch(e) {}
+}
+loadStatus();
+
+const topics = ['Hammasi', ...new Set(Q.map(q=>q.t))];
+const topicCounts = {};
+topics.forEach(t => {
+  topicCounts[t] = t === 'Hammasi' ? Q.length : Q.filter(q=>q.t===t).length;
+});
+
+function buildNav() {
+  const nav = document.getElementById('nav-topics');
+  nav.innerHTML = topics.map(t =>
+    `<div class="nav-item${t===topic?' active':''}" onclick="setTopic('${t}')">
+      <div class="nav-dot"></div>
+      <span>${t}</span>
+      <span class="nav-count">${topicCounts[t]}</span>
+    </div>`
+  ).join('');
+}
+
+function setTopic(t) {
+  topic = t;
+  buildNav();
+  render();
+  closeSidebar();
+}
+
+function setFilter(f) {
+  filter = f;
+  ['all','unseen','unknown','known'].forEach(x => {
+    const el = document.getElementById('chip-'+x);
+    if(el) el.className = 'chip' + (x===f ? ' active-'+f : '');
+  });
+  render();
+}
+
+function getFiltered() {
+  const sv = document.getElementById('search').value.toLowerCase();
+  return Q.map((q,i)=>({...q,i})).filter(({q,t,i})=>{
+    const topicOk = topic === 'Hammasi' || t === topic;
+    const searchOk = !sv || q.toLowerCase().includes(sv);
+    const filterOk = filter === 'all' ||
+      (filter==='known' && status[i]==='known') ||
+      (filter==='unknown' && status[i]==='unknown') ||
+      (filter==='unseen' && !status[i]);
+    return topicOk && searchOk && filterOk;
+  });
+}
+
+function mark(i, val, e) {
+  e.stopPropagation();
+  status[i] = status[i] === val ? undefined : val;
+  if(!status[i]) delete status[i];
+  saveStatus();
+  updateStats();
+  const card = document.getElementById('card-'+i);
+  if(card) {
+    card.className = 'qcard' + (status[i]==='known'?' known':status[i]==='unknown'?' unknown':'') + (card.classList.contains('open')?' open':'');
+    const dot = card.querySelector('.status-dot');
+    if(dot) dot.style.background = status[i]==='known'?'var(--accent)':status[i]==='unknown'?'var(--danger)':'var(--bg4)';
+  }
+}
+
+function toggle(i, e) {
+  e.stopPropagation();
+  const card = document.getElementById('card-'+i);
+  if(!card) return;
+  card.classList.toggle('open');
+}
+
+function updateStats() {
+  const known = Object.values(status).filter(v=>v==='known').length;
+  const unknown = Object.values(status).filter(v=>v==='unknown').length;
+  const unseen = Q.length - Object.keys(status).length;
+  const pct = Math.round((known/Q.length)*100);
+  document.getElementById('sknown').textContent = known;
+  document.getElementById('sunknown').textContent = unknown;
+  document.getElementById('sunseen').textContent = unseen;
+  document.getElementById('pbar').style.width = pct + '%';
+  document.getElementById('pct').textContent = pct + '%';
+  document.getElementById('hknown').textContent = known;
+  document.getElementById('hunknown').textContent = unknown;
+}
+
+function render() {
+  const list = getFiltered();
+  const container = document.getElementById('qlist');
+  const secTitle = document.getElementById('sec-title');
+  const countBadge = document.getElementById('count-badge');
+
+  secTitle.textContent = topic === 'Hammasi' ? 'Barcha savollar' : topic;
+  countBadge.textContent = list.length + ' ta';
+
+  if(!list.length) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>Savollar topilmadi</h3><p>Boshqa filter yoki qidiruv so'zi sinab ko'ring</p></div>`;
+    return;
+  }
+
+  container.innerHTML = list.map(({q,a,i,t}) => {
+    const s = status[i];
+    const cls = 'qcard' + (s==='known'?' known':s==='unknown'?' unknown':'');
+    const dotStyle = s==='known'?'background:var(--accent)':s==='unknown'?'background:var(--danger)':'';
+    return `<div class="${cls}" id="card-${i}">
+      <div class="qcard-header" onclick="toggle(${i},event)">
+        <span class="qnum">#${i+1}</span>
+        <span class="qtopic-tag">${t}</span>
+        <span class="qtext">${q}</span>
+        <div class="status-dot" style="${dotStyle}"></div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="qanswer">
+        <div class="answer-inner">
+          <div class="answer-text">${a}</div>
+          <div class="qactions">
+            <button class="btn btn-outline" onclick="toggle(${i},event)">Yopish</button>
+            <button class="btn btn-green" onclick="mark(${i},'known',event)">✓ Bildim</button>
+            <button class="btn btn-red" onclick="mark(${i},'unknown',event)">✗ Bilmadim</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  updateStats();
+}
+
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+buildNav();
+render();
+updateStats();
+</script>
+</body>
+</html>
